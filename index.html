@@ -650,7 +650,7 @@ function renderFeroceConfirm(data,qf){
   Object.entries(data).forEach(([k,v])=>{if(!v)return;const row=document.createElement('div');row.style.cssText='display:flex;gap:8px;font-size:13px';row.innerHTML=`<span style="color:#8E8E93;min-width:72px">${labels[k]||k}</span><span style="color:#F5F5F7;font-weight:600">${v}</span>`;recap.appendChild(row);});
   body.appendChild(recap);
   const send=document.createElement('button');send.className='f-submit';send.textContent='Envoyer ma demande →';
-  send.onclick=()=>{const subj=encodeURIComponent(qf.subjectTpl(data));const bd=encodeURIComponent(qf.bodyTpl(data));window.open(`mailto:${qf.mailto}?subject=${subj}&body=${bd}`,'_blank');const sw=document.createElement('div');sw.className='success-wrap show';sw.innerHTML='<div class="success-ico2">✅</div><div class="success-t">Demande envoyée !</div><div class="success-s">Féroce Graphics te recontacte avec ta remise Clemoto prise en compte.</div>';body.innerHTML='';body.appendChild(sw);};
+  send.onclick=async()=>{send.disabled=true;send.textContent='Envoi...';try{const r=await fetch('https://formspree.io/f/xvzlrkyq',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:qf.subjectTpl(data),...data,partenaire:'Féroce Graphics'})});if(r.ok){const sw=document.createElement('div');sw.className='success-wrap show';sw.innerHTML='<div class="success-ico2">✅</div><div class="success-t">Demande envoyée !</div><div class="success-s">Féroce Graphics te recontacte rapidement avec ta remise Clemoto.</div>';body.innerHTML='';body.appendChild(sw);}else{send.disabled=false;send.textContent='Réessayer →';}}catch{send.disabled=false;send.textContent='Réessayer →';}};
   body.appendChild(send);
   const bk=document.createElement('button');bk.className='btn-back';bk.style.marginTop='6px';bk.innerHTML='← Modifier';bk.onclick=()=>renderQuizForm(0,data);body.appendChild(bk);
 }
@@ -668,7 +668,7 @@ function renderExtraForm(cfg){
     else{const labels={prenom:'Prénom',nom:'Nom',email:'Email'};const lbl=document.createElement('div');lbl.className='q-label';lbl.textContent=labels[f]||f;body.appendChild(lbl);const inp=document.createElement('input');inp.className='f-inp';inp.style.marginBottom='8px';inp.type=f==='email'?'email':'text';inp.placeholder=labels[f]||f;inp.oninput=()=>data[f]=inp.value;body.appendChild(inp);}
   });
   const send=document.createElement('button');send.className='f-submit';send.style.marginTop='6px';send.textContent=cfg.submitLabel;
-  send.onclick=()=>{const missing=cfg.fields.filter(f=>f!=='projet'&&!data[f]);if(missing.length){send.style.animation='shake .3s ease';setTimeout(()=>send.style.animation='',400);return;}const subj=encodeURIComponent(cfg.subjectTpl(data));const bd=encodeURIComponent(cfg.bodyTpl(data));window.open(`mailto:${cfg.mailto}?subject=${subj}&body=${bd}`,'_blank');const sw=document.createElement('div');sw.className='success-wrap show';sw.innerHTML=`<div class="success-ico2">✅</div><div class="success-t">${cfg.successTitle}</div><div class="success-s">${cfg.successSub}</div>`;body.innerHTML='';body.appendChild(sw);};
+  send.onclick=async()=>{const missing=cfg.fields.filter(f=>f!=='projet'&&!data[f]);if(missing.length){send.style.animation='shake .3s ease';setTimeout(()=>send.style.animation='',400);return;}send.disabled=true;send.textContent='Envoi...';try{const r=await fetch('https://formspree.io/f/xvzlrkyq',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:cfg.subjectTpl(data),...data,partenaire:'melc.'})});if(r.ok){const sw=document.createElement('div');sw.className='success-wrap show';sw.innerHTML=`<div class="success-ico2">✅</div><div class="success-t">${cfg.successTitle}</div><div class="success-s">${cfg.successSub}</div>`;body.innerHTML='';body.appendChild(sw);}else{send.disabled=false;send.textContent=cfg.submitLabel;}}catch{send.disabled=false;send.textContent=cfg.submitLabel;}};
   body.appendChild(send);
 }
 
@@ -715,14 +715,14 @@ function renderProjetQuiz(){
   row.appendChild(inp1);row.appendChild(inp2);body.appendChild(row);
 
   const send=document.createElement('button');send.className='f-submit';send.style.marginTop='10px';send.textContent='Envoyer mon projet →';
-  send.onclick=()=>{
+  send.onclick=async()=>{
     if(!data.prenom||!data.email){send.style.animation='shake .3s ease';setTimeout(()=>send.style.animation='',400);return;}
-    const subj=encodeURIComponent('[melc.] Projet sur mesure — '+data.prenom);
-    const bd=encodeURIComponent('Nouveau projet melc.\n\nPrénom : '+data.prenom+'\nEmail : '+data.email+'\nBudget : '+(data.budget||'Non précisé')+'\nThème : '+(data.theme||'Non précisé')+'\nDescription : '+(data.description||'Aucune'));
-    window.open('mailto:clmntmosa@gmail.com?subject='+subj+'&body='+bd,'_blank');
-    const sw=document.createElement('div');sw.className='success-wrap show';
-    sw.innerHTML='<div class="success-ico2">🚀</div><div class="success-t">Projet envoyé !</div><div class="success-s">Je te réponds rapidement pour qu\'on en parle ensemble.</div>';
-    body.innerHTML='';body.appendChild(sw);
+    send.disabled=true;send.textContent='Envoi...';
+    try{
+      const r=await fetch('https://formspree.io/f/xvzlrkyq',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({_subject:'[melc.] Projet — '+data.prenom,prenom:data.prenom,email:data.email,budget:data.budget||'Non précisé',theme:data.theme||'Non précisé',description:data.description||'',partenaire:'melc. projet'})});
+      if(r.ok){const sw=document.createElement('div');sw.className='success-wrap show';sw.innerHTML='<div class="success-ico2">🚀</div><div class="success-t">Projet envoyé !</div><div class="success-s">Je te réponds rapidement pour qu\'on en parle ensemble.</div>';body.innerHTML='';body.appendChild(sw);}
+      else{send.disabled=false;send.textContent='Envoyer mon projet →';}
+    }catch{send.disabled=false;send.textContent='Envoyer mon projet →';}
   };
   body.appendChild(send);
 }
